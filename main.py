@@ -2,6 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import logging
+import os
 
 from database import db, init_database
 from auth import (
@@ -56,13 +57,16 @@ async def register_user(
     """Register a new user (first user requires admin API key)"""
     from database import db
     
+    # Get the valid setup key from environment variable
+    VALID_SETUP_KEY = os.getenv("ADMIN_API_KEY", "FIRST_USER_SETUP")
+    
     # Check if this is the first user
     async with db.acquire() as conn:
         user_count = await conn.fetchval("SELECT COUNT(*) FROM users")
         
         if user_count == 0:
             # First user - create tenant as well
-            if not admin_api_key or admin_api_key != "FIRST_USER_SETUP":
+            if not admin_api_key or admin_api_key != VALID_SETUP_KEY:
                 raise HTTPException(403, "First user setup requires valid setup key")
             
             # Create tenant
