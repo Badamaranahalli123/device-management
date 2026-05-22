@@ -1,7 +1,7 @@
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- ==================== TENANTS ====================
+-- Tenants table
 CREATE TABLE tenants (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
@@ -13,7 +13,7 @@ CREATE TABLE tenants (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- ==================== USERS ====================
+-- Users table
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     tenant_id INTEGER NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
@@ -29,7 +29,7 @@ CREATE TABLE users (
     UNIQUE(tenant_id, email)
 );
 
--- ==================== DEVICES ====================
+-- Devices table
 CREATE TABLE devices (
     id SERIAL PRIMARY KEY,
     tenant_id INTEGER NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
@@ -47,7 +47,7 @@ CREATE TABLE devices (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- ==================== DEVICE GROUPS ====================
+-- Device groups table
 CREATE TABLE device_groups (
     id SERIAL PRIMARY KEY,
     tenant_id INTEGER NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
@@ -57,6 +57,7 @@ CREATE TABLE device_groups (
     UNIQUE(tenant_id, group_name)
 );
 
+-- Device group members table
 CREATE TABLE device_group_members (
     device_id INTEGER REFERENCES devices(id) ON DELETE CASCADE,
     group_id INTEGER REFERENCES device_groups(id) ON DELETE CASCADE,
@@ -64,7 +65,7 @@ CREATE TABLE device_group_members (
     PRIMARY KEY (device_id, group_id)
 );
 
--- ==================== COMMANDS ====================
+-- Commands table
 CREATE TABLE commands (
     id SERIAL PRIMARY KEY,
     tenant_id INTEGER NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
@@ -83,10 +84,7 @@ CREATE TABLE commands (
     retry_count INTEGER DEFAULT 0
 );
 
-CREATE INDEX idx_commands_device_status ON commands(device_id, status);
-CREATE INDEX idx_commands_queued ON commands(priority, queued_at) WHERE status = 'queued';
-
--- ==================== AUDIT LOGS ====================
+-- Audit logs table
 CREATE TABLE audit_logs (
     id BIGSERIAL PRIMARY KEY,
     tenant_id INTEGER REFERENCES tenants(id),
@@ -104,9 +102,7 @@ CREATE TABLE audit_logs (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_audit_tenant_time ON audit_logs(tenant_id, created_at DESC);
-
--- ==================== SESSIONS ====================
+-- User sessions table
 CREATE TABLE user_sessions (
     id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -118,8 +114,14 @@ CREATE TABLE user_sessions (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- ==================== FUNCTIONS & TRIGGERS ====================
+-- Indexes for better performance
+CREATE INDEX idx_commands_device_status ON commands(device_id, status);
+CREATE INDEX idx_commands_queued ON commands(priority, queued_at);
+CREATE INDEX idx_audit_tenant_time ON audit_logs(tenant_id, created_at DESC);
+CREATE INDEX idx_devices_tenant ON devices(tenant_id);
+CREATE INDEX idx_users_tenant ON users(tenant_id);
 
+-- Update timestamp function
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -128,6 +130,7 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
+-- Triggers for updated_at
 CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
