@@ -131,11 +131,15 @@ END;
 $$ language 'plpgsql';
 
 -- Triggers for updated_at
-CREATE TRIGGER IF NOT EXISTS update_users_updated_at BEFORE UPDATE ON users
+-- Instead of CREATE TRIGGER IF NOT EXISTS, drop first then create
+DROP TRIGGER IF EXISTS update_users_updated_at ON users;
+CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER IF NOT EXISTS update_devices_updated_at BEFORE UPDATE ON devices
+DROP TRIGGER IF EXISTS update_devices_updated_at ON devices;
+CREATE TRIGGER update_devices_updated_at BEFORE UPDATE ON devices
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER IF NOT EXISTS update_tenants_updated_at BEFORE UPDATE ON tenants
+DROP TRIGGER IF EXISTS update_tenants_updated_at ON tenants;
+CREATE TRIGGER update_tenants_updated_at BEFORE UPDATE ON tenants
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
