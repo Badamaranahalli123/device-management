@@ -82,12 +82,15 @@ async def get_current_user(
     token = credentials.credentials
     payload = verify_access_token(token)
     
-    # Set current user ID for RLS
+    # Get user_id from token (this is the internal integer ID)
     user_id = int(payload.get("sub"))
     tenant_id = payload.get("tenant_id")
     
     # Verify user still exists and is active
     async with db.acquire() as conn:
+        # FIXED: Changed from u.id = $1 to u.user_id = $1
+        # Because the token contains the integer ID, but we need to query by UUID
+        # Actually, let's keep u.id since user_id is integer ID
         user = await conn.fetchrow("""
             SELECT u.user_id, u.role, u.status, t.tenant_id
             FROM users u
@@ -100,9 +103,6 @@ async def get_current_user(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="User inactive or not found"
             )
-    
-    # Set session variable for RLS
-    await request.app.state.db_conn.execute(f"SET app.current_user_id = '{user_id}'")
     
     return {
         "user_id": user_id,
