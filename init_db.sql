@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS  tenants (
 -- Users table
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
+    user_id UUID UNIQUE DEFAULT uuid_generate_v4(),
     tenant_id INTEGER NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
     email VARCHAR(255) NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
