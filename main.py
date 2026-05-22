@@ -7,6 +7,7 @@ import asyncpg
 import hashlib
 import secrets
 from datetime import datetime, timedelta
+import traceback
 
 # ========== Simple Password Hashing ==========
 def hash_password(password: str) -> str:
@@ -119,6 +120,7 @@ async def debug():
         "admin_key": os.getenv("ADMIN_API_KEY", "NOT SET")
     }
 
+# ========== Register Endpoint with Debug ==========
 @app.post("/auth/register")
 async def register(
     email: str,
@@ -126,37 +128,53 @@ async def register(
     full_name: str,
     admin_api_key: Optional[str] = None
 ):
-    VALID_KEY = os.getenv("ADMIN_API_KEY", "FIRST_USER_SETUP")
-    
-    async with db_pool.acquire() as conn:
-        # Check if any user exists
-        user_count = await conn.fetchval("SELECT COUNT(*) FROM users")
+    try:
+        print(f"DEBUG: Register called with email={email}, full_name={full_name}, admin_key={admin_api_key}")
         
-        if user_count == 0:
-            # First user - need admin key
-            if not admin_api_key or admin_api_key != VALID_KEY:
-                raise HTTPException(403, "Invalid admin API key")
+        VALID_KEY = os.getenv("ADMIN_API_KEY", "FIRST_USER_SETUP")
+        print(f"DEBUG: VALID_KEY={VALID_KEY}")
+        
+        async with db_pool.acquire() as conn:
+            # Check if any user exists
+            user_count = await conn.fetchval("SELECT COUNT(*) FROM users")
+            print(f"DEBUG: user_count={user_count}")
             
-            # Create tenant
-            tenant = await conn.fetchrow(
-                "INSERT INTO tenants (name) VALUES ($1) RETURNING id",
-                f"{full_name}'s Organization"
-            )
-            tenant_id = tenant["id"]
-        else:
-            raise HTTPException(400, "User already exists")
+            if user_count == 0:
+                # First user - need admin key
+                if not admin_api_key or admin_api_key != VALID_KEY:
+                    raise HTTPException(403, "Invalid admin API key")
+                
+                # Create tenant
+                tenant = await conn.fetchrow(
+                    "INSERT INTO tenants (name) VALUES ($1) RETURNING id",
+                    f"{full_name}'s Organization"
+                )
+                tenant_id = tenant["id"]
+                print(f"DEBUG: tenant created with id={tenant_id}")
+            else:
+                raise HTTPException(400, "User already exists")
+        
+        # Create user
+        password_hash = hash_password(password)
+        print(f"DEBUG: password hashed successfully")
+        
+        async with db_pool.acquire() as conn:
+            await conn.execute("""
+                INSERT INTO users (tenant_id, email, password_hash, full_name)
+                VALUES ($1, $2, $3, $4)
+            """, tenant_id, email, password_hash, full_name)
+            print(f"DEBUG: user inserted successfully")
+        
+        return {"message": "User created", "email": email, "full_name": full_name}
     
-    # Create user
-    password_hash = hash_password(password)
-    
-    async with db_pool.acquire() as conn:
-        await conn.execute("""
-            INSERT INTO users (tenant_id, email, password_hash, full_name)
-            VALUES ($1, $2, $3, $4)
-        """, tenant_id, email, password_hash, full_name)
-    
-    return {"message": "User created", "email": email, "full_name": full_name}
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"DEBUG ERROR: {type(e).__name__}: {str(e)}")
+        traceback.print_exc()
+        raise HTTPException(500, f"Error: {str(e)}")
 
+# ========== Login Endpoint ==========
 @app.post("/auth/login")
 async def login(email: str, password: str):
     async with db_pool.acquire() as conn:
@@ -174,3 +192,7 @@ async def login(email: str, password: str):
         token = create_token(user["id"], user["tenant_id"])
         
         return {"access_token": token, "token_type": "bearer"}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
