@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Device Management Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .container { max-width: 800px; margin: auto; }
+        .form-group { margin-bottom: 15px; }
+        input, select, button { padding: 8px; margin: 5px; }
+        .device-card { border: 1px solid #ccc; padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .error { color: red; }
+        .success { color: green; }
+        .hidden { display: none; }
+        button { cursor: pointer; background-color: #007bff; color: white; border: none; border-radius: 5px; }
+        button:hover { background-color: #0056b3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Device Management System</h1>
+        
+        <!-- Login Section -->
+        <div id="loginSection">
+            <h2>Login</h2>
+            <div class="form-group">
+                <input type="email" id="email" placeholder="Email" value="admin@example.com">
+            </div>
+            <div class="form-group">
+                <input type="password" id="password" placeholder="Password" value="Admin123!">
+            </div>
+            <button onclick="login()">Login</button>
+            <p id="loginError" class="error"></p>
+        </div>
+
+        <!-- Dashboard Section (shown after login) -->
+        <div id="dashboardSection" class="hidden">
+            <h2>Dashboard <button onclick="logout()" style="float:right">Logout</button></h2>
+            <p>Welcome, <span id="userEmail"></span></p>
+            
+            <h3>Add New Device</h3>
+            <div class="form-group">
+                <input type="text" id="deviceName" placeholder="Device Name">
+                <select id="deviceType">
+                    <option value="landmine_shoe">Landmine Shoe</option>
+                    <option value="ai_spectacles">AI Spectacles</option>
+                    <option value="drone">Drone</option>
+                    <option value="waste_sensor">Waste Sensor</option>
+                </select>
+                <input type="text" id="serialNumber" placeholder="Serial Number">
+                <button onclick="addDevice()">Add Device</button>
+            </div>
+            
+            <h3>All Devices</h3>
+            <div id="devicesList"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = "https://device-management-8.onrender.com";
+        let authToken = null;
+
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/login?email=${email}&password=${password}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    authToken = data.access_token;
+                    localStorage.setItem('token', authToken);
+                    
+                    document.getElementById('loginSection').classList.add('hidden');
+                    document.getElementById('dashboardSection').classList.remove('hidden');
+                    document.getElementById('userEmail').innerText = email;
+                    
+                    loadDevices();
+                } else {
+                    document.getElementById('loginError').innerText = 'Login failed. Check credentials.';
+                }
+            } catch (error) {
+                document.getElementById('loginError').innerText = error.message;
+            }
+        }
+
+        async function loadDevices() {
+            try {
+                const response = await fetch(`${API_BASE}/devices`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                if (response.ok) {
+                    const devices = await response.json();
+                    const container = document.getElementById('devicesList');
+                    
+                    if (devices.length === 0) {
+                        container.innerHTML = '<p>No devices found. Add your first device!</p>';
+                    } else {
+                        container.innerHTML = devices.map(device => `
+                            <div class="device-card">
+                                <strong>${device.device_name}</strong><br>
+                                Type: ${device.device_type}<br>
+                                Serial: ${device.serial_number}<br>
+                                Status: ${device.status || 'Active'}<br>
+                                <button onclick="sendCommand('${device.device_id}')">Send Command</button>
+                            </div>
+                        `).join('');
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading devices:', error);
+            }
+        }
+
+        async function addDevice() {
+            const name = document.getElementById('deviceName').value;
+            const type = document.getElementById('deviceType').value;
+            const serial = document.getElementById('serialNumber').value;
+            
+            if (!name || !serial) {
+                alert('Please fill device name and serial number');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/devices`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        device_name: name,
+                        device_type: type,
+                        serial_number: serial,
+                        firmware_version: "1.0.0"
+                    })
+                });
+                
+                if (response.ok) {
+                    alert('Device added successfully!');
+                    document.getElementById('deviceName').value = '';
+                    document.getElementById('serialNumber').value = '';
+                    loadDevices();
+                } else {
+                    const error = await response.json();
+                    alert('Failed to add device: ' + JSON.stringify(error));
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        async function sendCommand(deviceId) {
+            const command = prompt('Enter command (reboot, calibrate, collect_data):', 'calibrate');
+            if (command) {
+                try {
+                    const response = await fetch(`${API_BASE}/commands`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${authToken}`
+                        },
+                        body: JSON.stringify({
+                            device_id: deviceId,
+                            command_type: command,
+                            payload: {}
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        alert('Command sent successfully!');
+                    } else {
+                        alert('Failed to send command');
+                    }
+                } catch (error) {
+                    alert('Error: ' + error.message);
+                }
+            }
+        }
+
+        function logout() {
+            authToken = null;
+            localStorage.removeItem('token');
+            document.getElementById('loginSection').classList.remove('hidden');
+            document.getElementById('dashboardSection').classList.add('hidden');
+        }
+
+        // Check for saved token on page load
+        const savedToken = localStorage.getItem('token');
+        if (savedToken) {
+            authToken = savedToken;
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('dashboardSection').classList.remove('hidden');
+            document.getElementById('userEmail').innerText = 'admin@example.com';
+            loadDevices();
+        }
+    </script>
+</body>
+</html>
