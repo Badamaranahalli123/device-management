@@ -2,7 +2,7 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Tenants table
-CREATE TABLE tenants (
+CREATE TABLE IF NOT EXISTS  tenants (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     organization_type VARCHAR(50) NOT NULL,
@@ -14,7 +14,7 @@ CREATE TABLE tenants (
 );
 
 -- Users table
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     tenant_id INTEGER NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
     email VARCHAR(255) NOT NULL,
@@ -30,7 +30,7 @@ CREATE TABLE users (
 );
 
 -- Devices table
-CREATE TABLE devices (
+CREATE TABLE IF NOT EXISTS devices (
     id SERIAL PRIMARY KEY,
     tenant_id INTEGER NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
     device_name VARCHAR(100) NOT NULL,
@@ -48,7 +48,7 @@ CREATE TABLE devices (
 );
 
 -- Device groups table
-CREATE TABLE device_groups (
+CREATE TABLE IF NOT EXISTS device_groups (
     id SERIAL PRIMARY KEY,
     tenant_id INTEGER NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
     group_name VARCHAR(100) NOT NULL,
@@ -58,7 +58,7 @@ CREATE TABLE device_groups (
 );
 
 -- Device group members table
-CREATE TABLE device_group_members (
+CREATE TABLE IF NOT EXISTS  device_group_members (
     device_id INTEGER REFERENCES devices(id) ON DELETE CASCADE,
     group_id INTEGER REFERENCES device_groups(id) ON DELETE CASCADE,
     added_at TIMESTAMPTZ DEFAULT NOW(),
@@ -66,7 +66,7 @@ CREATE TABLE device_group_members (
 );
 
 -- Commands table
-CREATE TABLE commands (
+CREATE TABLE IF NOT EXISTS  commands (
     id SERIAL PRIMARY KEY,
     tenant_id INTEGER NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
     device_id INTEGER NOT NULL REFERENCES devices(id) ON DELETE CASCADE,
@@ -85,7 +85,7 @@ CREATE TABLE commands (
 );
 
 -- Audit logs table
-CREATE TABLE audit_logs (
+CREATE TABLE IF NOT EXISTS  audit_logs (
     id BIGSERIAL PRIMARY KEY,
     tenant_id INTEGER REFERENCES tenants(id),
     user_id INTEGER REFERENCES users(id),
@@ -103,7 +103,7 @@ CREATE TABLE audit_logs (
 );
 
 -- User sessions table
-CREATE TABLE user_sessions (
+CREATE TABLE IF NOT EXISTS  user_sessions (
     id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     refresh_token_hash VARCHAR(255) NOT NULL,
