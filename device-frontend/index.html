@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rakshan | Device Management System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #0f142e 50%, #1a1f3a 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        /* Animated Background */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .bg-animation::before {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(0, 255, 255, 0.05) 0%, transparent 50%);
+            animation: rotate 30s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header */
+        .header {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px 30px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #00d4ff, #0052cc);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .company-name h1 {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff, #00d4ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .company-name p {
+            font-size: 12px;
+            opacity: 0.7;
+            letter-spacing: 1px;
+        }
+
+        .badge {
+            background: linear-gradient(135deg, #00d4ff, #0052cc);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* Cards */
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .card h2 {
+            font-size: 22px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card h2 i {
+            color: #00d4ff;
+        }
+
+        .card h3 {
+            font-size: 18px;
+            margin: 20px 0 15px 0;
+            color: #00d4ff;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            color: white;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #00d4ff;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00d4ff, #0052cc);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 212, 255, 0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff4757, #c0392b);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #00b894, #009432);
+            color: white;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+        }
+
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .logout-btn {
+            background: rgba(255, 71, 87, 0.2);
+            border: 1px solid rgba(255, 71, 87, 0.5);
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 71, 87, 0.4);
+        }
+
+        /* Device Grid */
+        .devices-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .device-card {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s;
+        }
+
+        .device-card:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateY(-3px);
+        }
+
+        .device-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .device-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #00d4ff, #0052cc);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .device-status {
+            background: rgba(0, 184, 148, 0.2);
+            color: #00b894;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .device-name {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .device-info {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .device-info i {
+            width: 20px;
+            color: #00d4ff;
+        }
+
+        .device-actions {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .cmd-btn {
+            flex: 1;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .cmd-btn:hover {
+            background: rgba(0, 212, 255, 0.3);
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1a1f3a, #0f142e);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Messages */
+        .error-message {
+            background: rgba(255, 71, 87, 0.2);
+            border: 1px solid rgba(255, 71, 87, 0.5);
+            padding: 12px;
+            border-radius: 12px;
+            margin-top: 15px;
+            color: #ff4757;
+        }
+
+        .success-message {
+            background: rgba(0, 184, 148, 0.2);
+            border: 1px solid rgba(0, 184, 148, 0.5);
+            padding: 12px;
+            border-radius: 12px;
+            margin-top: 15px;
+            color: #00b894;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(0, 212, 255, 0.3);
+            border-top-color: #00d4ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 12px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            .devices-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation"></div>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <div class="logo">
+                        <i class="fas fa-satellite"></i>
+                    </div>
+                    <div class="company-name">
+                        <h1>RAKSHAN</h1>
+                        <p>EARTH & SPACE TECH</p>
+                    </div>
+                </div>
+                <div class="badge">
+                    <i class="fas fa-shield-alt"></i> Defense IoT Platform
+                </div>
+            </div>
+        </div>
+
+        <!-- Login Section -->
+        <div id="loginSection" class="card">
+            <h2><i class="fas fa-lock"></i> Secure Access</h2>
+            <div class="form-group">
+                <label><i class="fas fa-envelope"></i> Email Address</label>
+                <input type="email" id="email" placeholder="admin@example.com" value="admin@example.com">
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-key"></i> Password</label>
+                <input type="password" id="password" placeholder="Enter your password" value="Admin123!">
+            </div>
+            <button class="btn btn-primary" onclick="login()">
+                <i class="fas fa-sign-in-alt"></i> Login to Dashboard
+            </button>
+            <div id="loginError" class="error-message hidden"></div>
+        </div>
+
+        <!-- Dashboard Section -->
+        <div id="dashboardSection" class="hidden">
+            <!-- Dashboard Header -->
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                    <div>
+                        <h2><i class="fas fa-tachometer-alt"></i> Dashboard</h2>
+                        <p style="opacity: 0.7;">Welcome back, <strong id="userEmail"></strong></p>
+                    </div>
+                    <button class="btn btn-danger logout-btn" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
+            </div>
+
+            <!-- Add Device Form -->
+            <div class="card">
+                <h2><i class="fas fa-plus-circle"></i> Register New Device</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                    <div class="form-group">
+                        <label><i class="fas fa-microchip"></i> Device Name</label>
+                        <input type="text" id="deviceName" placeholder="e.g., Sentinel Pro X1">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-tag"></i> Device Type</label>
+                        <select id="deviceType">
+                            <option value="landmine_shoe">🚜 Landmine Avoidance Shoe</option>
+                            <option value="ai_spectacles">👓 AI Vision Spectacles</option>
+                            <option value="drone">🚁 Tactical Drone</option>
+                            <option value="waste_sensor">🗑️ Smart Waste Sensor</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-barcode"></i> Serial Number</label>
+                        <input type="text" id="serialNumber" placeholder="e.g., RAK-2024-001">
+                    </div>
+                </div>
+                <button class="btn btn-success" onclick="addDevice()">
+                    <i class="fas fa-save"></i> Register Device
+                </button>
+                <div id="addDeviceMessage"></div>
+            </div>
+
+            <!-- Devices List -->
+            <div class="card">
+                <h2><i class="fas fa-microchip"></i> Active Devices</h2>
+                <div id="devicesList" class="devices-grid">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Loading devices...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p><i class="fas fa-shield-alt"></i> Secure Device Management Platform | Powered by FastAPI & PostgreSQL</p>
+            <p style="margin-top: 10px;">© 2026 Rakshan Earth & Space Tech | All Rights Reserved</p>
+        </div>
+    </div>
+
+    <!-- Command Modal -->
+    <div id="commandModal" class="modal hidden">
+        <div class="modal-content">
+            <h2 style="margin-bottom: 20px;"><i class="fas fa-paper-plane"></i> Send Command</h2>
+            <div class="form-group">
+                <label><i class="fas fa-bolt"></i> Command Type</label>
+                <select id="commandType">
+                    <option value="reboot">🔄 Reboot Device</option>
+                    <option value="calibrate">⚙️ Calibrate Sensors</option>
+                    <option value="collect_data">📊 Collect Telemetry</option>
+                    <option value="update_firmware">📡 Update Firmware</option>
+                    <option value="emergency_stop">🛑 Emergency Stop</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-code"></i> Command Payload (Optional)</label>
+                <input type="text" id="commandPayload" placeholder='{"param": "value"}'>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn btn-primary" onclick="sendCommandFromModal()">
+                    <i class="fas fa-paper-plane"></i> Execute Command
+                </button>
+                <button class="btn btn-outline" onclick="closeModal()">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API Configuration
+        const API_BASE = "https://device-management-8.onrender.com";
+        let authToken = null;
+        let currentDeviceId = null;
+
+        function showMessage(elementId, message, isError = true) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.innerHTML = `<div class="${isError ? 'error-message' : 'success-message'}">${message}</div>`;
+                setTimeout(() => { element.innerHTML = ''; }, 5000);
+            }
+        }
+
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/login?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    authToken = data.access_token;
+                    localStorage.setItem('token', authToken);
+                    
+                    document.getElementById('loginSection').classList.add('hidden');
+                    document.getElementById('dashboardSection').classList.remove('hidden');
+                    document.getElementById('userEmail').innerText = email;
+                    
+                    loadDevices();
+                } else {
+                    showMessage('loginError', '❌ Invalid email or password');
+                }
+            } catch (error) {
+                showMessage('loginError', '❌ Network error: ' + error.message);
+            }
+        }
+
+        async function loadDevices() {
+            const container = document.getElementById('devicesList');
+            container.innerHTML = '<div class="loading"><div class="spinner"></div><p>Loading devices...</p></div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/devices`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                if (response.ok) {
+                    const devices = await response.json();
+                    
+                    if (devices.length === 0) {
+                        container.innerHTML = '<div style="text-align: center; padding: 40px;"><p style="opacity: 0.7;">📭 No devices registered yet. Add your first device above!</p></div>';
+                    } else {
+                        container.innerHTML = devices.map(device => `
+                            <div class="device-card">
+                                <div class="device-header">
+                                    <div class="device-icon">
+                                        ${getDeviceIcon(device.device_type)}
+                                    </div>
+                                    <span class="device-status"><i class="fas fa-circle" style="font-size: 8px;"></i> Active</span>
+                                </div>
+                                <div class="device-name">${escapeHtml(device.device_name)}</div>
+                                <div class="device-info"><i class="fas fa-tag"></i> ${escapeHtml(device.device_type)}</div>
+                                <div class="device-info"><i class="fas fa-barcode"></i> SN: ${escapeHtml(device.serial_number)}</div>
+                                <div class="device-info"><i class="fas fa-microchip"></i> FW: ${escapeHtml(device.firmware_version || '1.0.0')}</div>
+                                <div class="device-actions">
+                                    <button class="cmd-btn" onclick="showCommandModal('${device.device_id}')">
+                                        <i class="fas fa-paper-plane"></i> Send Command
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                } else {
+                    container.innerHTML = '<div class="error-message">Failed to load devices. Please refresh.</div>';
+                }
+            } catch (error) {
+                container.innerHTML = '<div class="error-message">Network error: ' + error.message + '</div>';
+            }
+        }
+
+        function getDeviceIcon(type) {
+            const icons = {
+                'landmine_shoe': '🥾',
+                'ai_spectacles': '👓',
+                'drone': '🚁',
+                'waste_sensor': '🗑️'
+            };
+            return icons[type] || '📱';
+        }
+
+        async function addDevice() {
+            const name = document.getElementById('deviceName').value;
+            const type = document.getElementById('deviceType').value;
+            const serial = document.getElementById('serialNumber').value;
+            
+            if (!name || !serial) {
+                showMessage('addDeviceMessage', '❌ Please fill all fields');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/devices`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        device_name: name,
+                        device_type: type,
+                        serial_number: serial.toUpperCase(),
+                        firmware_version: "1.0.0",
+                        metadata: {}
+                    })
+                });
+                
+                if (response.ok) {
+                    showMessage('addDeviceMessage', '✅ Device registered successfully!', false);
+                    document.getElementById('deviceName').value = '';
+                    document.getElementById('serialNumber').value = '';
+                    loadDevices();
+                } else {
+                    showMessage('addDeviceMessage', '❌ Failed to register device');
+                }
+            } catch (error) {
+                showMessage('addDeviceMessage', '❌ Error: ' + error.message);
+            }
+        }
+
+        function showCommandModal(deviceId) {
+            currentDeviceId = deviceId;
+            document.getElementById('commandModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('commandModal').classList.add('hidden');
+            currentDeviceId = null;
+        }
+
+        async function sendCommandFromModal() {
+            const commandType = document.getElementById('commandType').value;
+            let payload = document.getElementById('commandPayload').value;
+            
+            try {
+                payload = payload ? JSON.parse(payload) : {};
+            } catch (e) {
+                alert('Invalid JSON payload. Using empty payload.');
+                payload = {};
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/commands`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        device_id: currentDeviceId,
+                        command_type: commandType,
+                        payload: payload,
+                        priority: 1
+                    })
+                });
+                
+                if (response.ok) {
+                    alert(`✅ Command "${commandType}" sent successfully!`);
+                    closeModal();
+                } else {
+                    alert('❌ Failed to send command');
+                }
+            } catch (error) {
+                alert('❌ Error: ' + error.message);
+            }
+        }
+
+        function logout() {
+            authToken = null;
+            localStorage.removeItem('token');
+            document.getElementById('loginSection').classList.remove('hidden');
+            document.getElementById('dashboardSection').classList.add('hidden');
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        const savedToken = localStorage.getItem('token');
+        if (savedToken) {
+            authToken = savedToken;
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('dashboardSection').classList.remove('hidden');
+            document.getElementById('userEmail').innerText = 'admin@example.com';
+            loadDevices();
+        }
+    </script>
+</body>
+</html>
