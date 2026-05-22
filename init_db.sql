@@ -115,11 +115,11 @@ CREATE TABLE IF NOT EXISTS  user_sessions (
 );
 
 -- Indexes for better performance
-CREATE INDEX idx_commands_device_status ON commands(device_id, status);
-CREATE INDEX idx_commands_queued ON commands(priority, queued_at);
-CREATE INDEX idx_audit_tenant_time ON audit_logs(tenant_id, created_at DESC);
-CREATE INDEX idx_devices_tenant ON devices(tenant_id);
-CREATE INDEX idx_users_tenant ON users(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_commands_device_status ON commands(device_id, status);
+CREATE INDEX IF NOT EXISTS idx_commands_queued ON commands(priority, queued_at);
+CREATE INDEX IF NOT EXISTS idx_audit_tenant_time ON audit_logs(tenant_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_devices_tenant ON devices(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_users_tenant ON users(tenant_id);
 
 -- Update timestamp function
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -131,11 +131,11 @@ END;
 $$ language 'plpgsql';
 
 -- Triggers for updated_at
-CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
+CREATE TRIGGER IF NOT EXISTS update_users_updated_at BEFORE UPDATE ON users
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_devices_updated_at BEFORE UPDATE ON devices
+CREATE TRIGGER IF NOT EXISTS update_devices_updated_at BEFORE UPDATE ON devices
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_tenants_updated_at BEFORE UPDATE ON tenants
+CREATE TRIGGER IF NOT EXISTS update_tenants_updated_at BEFORE UPDATE ON tenants
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
