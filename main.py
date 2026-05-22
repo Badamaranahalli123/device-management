@@ -68,7 +68,12 @@ async def init_db():
             CREATE TABLE IF NOT EXISTS tenants (
                 id SERIAL PRIMARY KEY,
                 name TEXT NOT NULL,
-                created_at TIMESTAMPTZ DEFAULT NOW()
+                organization_type TEXT DEFAULT 'research',
+                tier TEXT DEFAULT 'standard',
+                status TEXT DEFAULT 'active',
+                settings JSONB DEFAULT '{}',
+                created_at TIMESTAMPTZ DEFAULT NOW(),
+                updated_at TIMESTAMPTZ DEFAULT NOW()
             )
         """)
         await conn.execute("""
@@ -78,7 +83,11 @@ async def init_db():
                 email TEXT UNIQUE NOT NULL,
                 password_hash TEXT NOT NULL,
                 full_name TEXT NOT NULL,
-                created_at TIMESTAMPTZ DEFAULT NOW()
+                role TEXT DEFAULT 'admin',
+                permissions JSONB DEFAULT '[]',
+                status TEXT DEFAULT 'active',
+                created_at TIMESTAMPTZ DEFAULT NOW(),
+                updated_at TIMESTAMPTZ DEFAULT NOW()
             )
         """)
         print("Tables ready")
@@ -120,7 +129,7 @@ async def debug():
         "admin_key": os.getenv("ADMIN_API_KEY", "NOT SET")
     }
 
-# ========== Register Endpoint with Debug ==========
+# ========== Register Endpoint ==========
 @app.post("/auth/register")
 async def register(
     email: str,
@@ -129,13 +138,12 @@ async def register(
     admin_api_key: Optional[str] = None
 ):
     try:
-        print(f"DEBUG: Register called with email={email}, full_name={full_name}, admin_key={admin_api_key}")
+        print(f"DEBUG: Register called with email={email}")
         
         VALID_KEY = os.getenv("ADMIN_API_KEY", "FIRST_USER_SETUP")
         print(f"DEBUG: VALID_KEY={VALID_KEY}")
         
         async with db_pool.acquire() as conn:
-            # Check if any user exists
             user_count = await conn.fetchval("SELECT COUNT(*) FROM users")
             print(f"DEBUG: user_count={user_count}")
             
@@ -144,11 +152,12 @@ async def register(
                 if not admin_api_key or admin_api_key != VALID_KEY:
                     raise HTTPException(403, "Invalid admin API key")
                 
-                # Create tenant
-                tenant = await conn.fetchrow(
-                    "INSERT INTO tenants (name) VALUES ($1) RETURNING id",
-                    f"{full_name}'s Organization"
-                )
+                # Create tenant with all required fields
+                tenant = await conn.fetchrow("""
+                    INSERT INTO tenants (name, organization_type, tier, status) 
+                    VALUES ($1, 'research', 'standard', 'active') 
+                    RETURNING id
+                """, f"{full_name}'s Organization")
                 tenant_id = tenant["id"]
                 print(f"DEBUG: tenant created with id={tenant_id}")
             else:
@@ -160,12 +169,12 @@ async def register(
         
         async with db_pool.acquire() as conn:
             await conn.execute("""
-                INSERT INTO users (tenant_id, email, password_hash, full_name)
-                VALUES ($1, $2, $3, $4)
+                INSERT INTO users (tenant_id, email, password_hash, full_name, role, status)
+                VALUES ($1, $2, $3, $4, 'admin', 'active')
             """, tenant_id, email, password_hash, full_name)
             print(f"DEBUG: user inserted successfully")
         
-        return {"message": "User created", "email": email, "full_name": full_name}
+        return {"message": "User created successfully", "email": email, "full_name": full_name}
     
     except HTTPException:
         raise
@@ -178,10 +187,11 @@ async def register(
 @app.post("/auth/login")
 async def login(email: str, password: str):
     async with db_pool.acquire() as conn:
-        user = await conn.fetchrow(
-            "SELECT id, password_hash, tenant_id FROM users WHERE email = $1",
-            email
-        )
+        user = await conn.fetchrow("""
+            SELECT id, password_hash, tenant_id, role 
+            FROM users 
+            WHERE email = $1 AND status = 'active'
+        """, email)
         
         if not user:
             raise HTTPException(401, "Invalid email or password")
